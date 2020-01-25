@@ -6,7 +6,7 @@ This repository implements Conditional Gated Pixel CNN in TensorFlow 2. Have Fun
 
 Install this package using pip.
 
-```
+```bash
 pip install git+git://github.com/brandontrabucco/pixelcnn.git
 ```
 
@@ -14,7 +14,7 @@ pip install git+git://github.com/brandontrabucco/pixelcnn.git
 
 Create a Gated Masked Pixel CNN Keras Model.
 
-```
+```python
 model = pixelcnn.pixelcnn(
     32,     # input_size
     5,      # num_upconv_layers
@@ -25,12 +25,12 @@ model = pixelcnn.pixelcnn(
 
 Fetch the next batch of conditional vectors to seed image generation.
 
-```
+```python
 inputs = tf.random.normal([1, 32])
 ```
 
 Run the model to predict image logits.
 
-```
+```python
 logits = model(inputs)
 ```
