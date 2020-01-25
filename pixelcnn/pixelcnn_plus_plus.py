@@ -31,6 +31,7 @@ def pixelcnn_plus_plus(
     Args:
     - input_size: the cardinality of the vector space of the inputs
     - output_size: the cardinality of the vector space of the outputs
+    
     - num_upconv_layers: the number of Transpose Convolution layers to upscale
         the input vector
     - num_gated_masked_conv_layers_per_block: the number of Gated Masked
