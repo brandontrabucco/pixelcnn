@@ -143,8 +143,7 @@ def pixelcnn_plus_plus(
     # Build the Gated Masked Convolutional Stack #
     ##############################################
 
-    vertical_features = [None for j in range(num_blocks // 2)]
-    horizontal_features = [None for j in range(num_blocks // 2)]
+    vertical_features, horizontal_features = [], []
 
     for block in range(num_blocks // 2):
 
@@ -165,8 +164,8 @@ def pixelcnn_plus_plus(
                 bias_constraint=bias_constraint,
                 dropout_rate=dropout_rate)
 
-        vertical_features[block] = vertical_x
-        horizontal_features[block] = horizontal_x
+        vertical_features.append(vertical_x)
+        horizontal_features.append(horizontal_x)
 
         if block < num_blocks // 2 - 1:
 
