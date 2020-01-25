@@ -1,6 +1,6 @@
-# Conditional Gated Pixel CNN
+# Pixel CNN
 
-This repository implements Conditional Gated Pixel CNN in TensorFlow 2. Have Fun! -Brandon
+This repository implements Pixel CNN in TensorFlow 2. Have Fun! -Brandon
 
 ## Setup
 
