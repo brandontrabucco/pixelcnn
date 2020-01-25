@@ -15,22 +15,21 @@ pip install git+git://github.com/brandontrabucco/pixelcnn.git
 Create a Conditional Gated Pixel CNN Keras Model.
 
 ```python
-model = pixelcnn.pixelcnn(
+model = pixelcnn.pixelcnn_plus_plus(
     32,     # input_size
-    5,      # num_upconv_layers
-    5,      # num_gated_masked_conv_layers
-    1024,   # filters
-    5)      # kernel_size
+    256,    # output_size
+    5)      # num_upconv_layers
 ```
 
 Fetch the next batch of conditional vectors to seed the image generation process.
 
 ```python
-inputs = tf.random.normal([1, 32])
+inputs = tf.random.normal([4, 1, 1, 32])
+images = tf.random.uniform([4, 32, 32, 256], minval=0, maxval=256, dtype=tf.int32)
 ```
 
 Run the model to predict image logits.
 
 ```python
-logits = model(inputs)
+logits = model([inputs, images])
 ```
