@@ -73,11 +73,19 @@ def gated_masked_conv(
     # Mask the vertical convolution stack #
     #######################################
 
+    vertical_activations = layers.ZeroPadding2D(
+        padding=[[vertical_dy, 0], [horizontal_dx, horizontal_dx]],
+        data_format='channels_last')(vertical_x)
+
+    vertical_activations = layers.Cropping2D(
+        cropping=[[0, 1], [0, 0]],
+        data_format='channels_last')(vertical_activations)
+
     vertical_activations = layers.Conv2D(
         filters * 2,
         (vertical_dy, vertical_dx),
         strides=(1, 1),
-        padding='same',
+        padding='valid',
         data_format='channels_last',
         dilation_rate=(1, 1),
         activation=activation,
@@ -88,23 +96,25 @@ def gated_masked_conv(
         bias_regularizer=bias_regularizer,
         activity_regularizer=activity_regularizer,
         kernel_constraint=kernel_constraint,
-        bias_constraint=bias_constraint)(vertical_x)
-    vertical_activations = layers.ZeroPadding2D(
-        padding=[[vertical_dy, 0], [0, 0]],
-        data_format='channels_last')(vertical_activations)
-    vertical_activations = layers.Cropping2D(
-        cropping=[[0, vertical_dy], [0, 0]],
-        data_format='channels_last')(vertical_activations)
+        bias_constraint=bias_constraint)(vertical_activations)
 
     #########################################
     # Mask the horizontal convolution stack #
     #########################################
 
+    horizontal_activations = layers.ZeroPadding2D(
+        padding=[[0, 0], [horizontal_dx, 0]],
+        data_format='channels_last')(horizontal_x)
+
+    horizontal_activations = layers.Cropping2D(
+        cropping=[[0, 0], [0, 1]],
+        data_format='channels_last')(horizontal_activations)
+
     horizontal_activations = layers.Conv2D(
         filters * 2,
         (horizontal_dy, horizontal_dx),
         strides=(1, 1),
-        padding='same',
+        padding='valid',
         data_format='channels_last',
         dilation_rate=(1, 1),
         activation=activation,
@@ -115,13 +125,7 @@ def gated_masked_conv(
         bias_regularizer=bias_regularizer,
         activity_regularizer=activity_regularizer,
         kernel_constraint=kernel_constraint,
-        bias_constraint=bias_constraint)(horizontal_x)
-    horizontal_activations = layers.ZeroPadding2D(
-        padding=[[0, 0], [horizontal_dx, 0]],
-        data_format='channels_last')(horizontal_activations)
-    horizontal_activations = layers.Cropping2D(
-        cropping=[[0, 0], [0, horizontal_dx]],
-        data_format='channels_last')(horizontal_activations)
+        bias_constraint=bias_constraint)(horizontal_activations)
 
     #########################################
     # Gate the horizontal convolution stack #
@@ -133,7 +137,7 @@ def gated_masked_conv(
             filters * 2,
             (1, 1),
             strides=(1, 1),
-            padding='same',
+            padding='valid',
             data_format='channels_last',
             dilation_rate=(1, 1),
             activation=activation,
@@ -159,7 +163,7 @@ def gated_masked_conv(
             filters,
             (1, 1),
             strides=(1, 1),
-            padding='same',
+            padding='valid',
             data_format='channels_last',
             dilation_rate=(1, 1),
             activation=activation,
