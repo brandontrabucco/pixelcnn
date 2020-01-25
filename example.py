@@ -19,7 +19,7 @@ if __name__ == "__main__":
         maxval=256,
         dtype=tf.dtypes.int32)
 
-    logits = model(inputs)
+    logits = model([inputs, image])
 
     loss = tf.keras.losses.sparse_categorical_crossentropy(
         image,

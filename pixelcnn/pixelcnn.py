@@ -62,11 +62,20 @@ def pixelcnn(
     """
 
     inputs = layers.Input(shape=[None, None, input_size])
+    image = layers.Input(shape=[None, None])
+
+    #########################################
+    # Embed image pixels into feature space #
+    #########################################
+
+    embeddings = layers.TimeDistributed(
+        layers.Embedding(output_size, filters))(image)
 
     ###########################################
     # Build the Transpose Convolutional stack #
     ###########################################
 
+    x = inputs
     for i in range(num_upconv_layers):
         x = layers.Conv2DTranspose(
             filters,
@@ -86,11 +95,28 @@ def pixelcnn(
             kernel_constraint=kernel_constraint,
             bias_constraint=bias_constraint)(x)
 
+    x = layers.concatenate([embeddings, x])
+    vertical_x = horizontal_x = layers.Conv2D(
+        filters,
+        (1, 1),
+        strides=(1, 1),
+        padding='valid',
+        data_format='channels_last',
+        dilation_rate=(1, 1),
+        activation=activation,
+        use_bias=use_bias,
+        kernel_initializer=kernel_initializer,
+        bias_initializer=bias_initializer,
+        kernel_regularizer=kernel_regularizer,
+        bias_regularizer=bias_regularizer,
+        activity_regularizer=activity_regularizer,
+        kernel_constraint=kernel_constraint,
+        bias_constraint=bias_constraint)(x)
+
     ##############################################
     # Build the Gated Masked Convolutional Stack #
     ##############################################
 
-    vertical_x = horizontal_x = x
     for i in range(num_gated_masked_conv_layers):
         vertical_x, horizontal_x = gated_masked_conv(
             vertical_x,
@@ -135,7 +161,7 @@ def pixelcnn(
         output_size,
         (1, 1),
         strides=(1, 1),
-        padding='same',
+        padding='valid',
         data_format='channels_last',
         dilation_rate=(1, 1),
         activation=None,
@@ -148,6 +174,6 @@ def pixelcnn(
         kernel_constraint=kernel_constraint,
         bias_constraint=bias_constraint)(x)
 
-    model = models.Model(inputs=[inputs], outputs=logits)
+    model = models.Model(inputs=[inputs, image], outputs=logits)
 
     return model
