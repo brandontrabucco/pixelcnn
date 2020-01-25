@@ -23,7 +23,7 @@ model = pixelcnn.pixelcnn(
     5)      # kernel_size
 ```
 
-Fetch the next batch of conditional vectors to seed image generation.
+Fetch the next batch of conditional vectors to seed the image generation process.
 
 ```python
 inputs = tf.random.normal([1, 32])
