@@ -12,7 +12,7 @@ pip install git+git://github.com/brandontrabucco/pixelcnn.git
 
 ## Usage
 
-Create a Conditional Gated Pixel CNN Keras Model.
+Create a Pixel CNN Keras Model.
 
 ```python
 model = pixelcnn.pixelcnn_plus_plus(
