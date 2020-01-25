@@ -19,6 +19,7 @@ def gated_masked_conv(
         activity_regularizer=None,
         kernel_constraint=None,
         bias_constraint=None,
+        dropout_rate=0.1,
 ):
     """Perform a Gated Masked Convolution forward pass.
     
@@ -46,6 +47,8 @@ def gated_masked_conv(
 
     - kernel_constraint: Constraint function applied to the kernel matrix.
     - bias_constraint: Constraint function applied to the bias vector.
+
+    - dropout_rate: Float between 0 and 1. Fraction of the input units to drop.
 
     Returns:
     - vertical_x: output features with shape [batch_dim, height, width, channels]
@@ -175,6 +178,10 @@ def gated_masked_conv(
             activity_regularizer=activity_regularizer,
             kernel_constraint=kernel_constraint,
             bias_constraint=bias_constraint)(horizontal_activations)])
+
+    horizontal_activations = layers.SpatialDropout2D(
+        dropout_rate,
+        data_format='channels_last')(horizontal_activations)
 
     #######################################
     # Gate the vertical convolution stack #

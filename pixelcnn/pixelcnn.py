@@ -23,6 +23,7 @@ def pixelcnn(
         activity_regularizer=None,
         kernel_constraint=None,
         bias_constraint=None,
+        dropout_rate=0.1,
 ):
     """Stack many Gated Masked Convolution layers into a Conditional Gated PixelCNN.
 
@@ -53,6 +54,8 @@ def pixelcnn(
 
     - kernel_constraint: Constraint function applied to the kernel matrix.
     - bias_constraint: Constraint function applied to the bias vector.
+
+    - dropout_rate: Float between 0 and 1. Fraction of the input units to drop.
 
     Returns:
     - model: a keras model that accepts input vectors with shape [batch_dim, input_size]
@@ -105,11 +108,31 @@ def pixelcnn(
             bias_regularizer=bias_regularizer,
             activity_regularizer=activity_regularizer,
             kernel_constraint=kernel_constraint,
-            bias_constraint=bias_constraint)
+            bias_constraint=bias_constraint,
+            dropout_rate=dropout_rate)
 
     #######################################
     # Predict image logits for each pixel #
     #######################################
+
+    x = layers.add([
+        horizontal_x,
+        layers.Conv2D(
+            filters,
+            (1, 1),
+            strides=(1, 1),
+            padding='valid',
+            data_format='channels_last',
+            dilation_rate=(1, 1),
+            activation=activation,
+            use_bias=use_bias,
+            kernel_initializer=kernel_initializer,
+            bias_initializer=bias_initializer,
+            kernel_regularizer=kernel_regularizer,
+            bias_regularizer=bias_regularizer,
+            activity_regularizer=activity_regularizer,
+            kernel_constraint=kernel_constraint,
+            bias_constraint=bias_constraint)(vertical_x)])
 
     logits = layers.Conv2D(
         output_size,
@@ -126,7 +149,7 @@ def pixelcnn(
         bias_regularizer=bias_regularizer,
         activity_regularizer=activity_regularizer,
         kernel_constraint=kernel_constraint,
-        bias_constraint=bias_constraint)(horizontal_x)
+        bias_constraint=bias_constraint)(x)
 
     model = models.Model(inputs=[inputs], outputs=logits)
 

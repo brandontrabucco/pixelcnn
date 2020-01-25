@@ -9,14 +9,15 @@ if __name__ == "__main__":
 
     model = pixelcnn(
         32,     # input_size
+        256,    # output_size
         5,      # num_upconv_layers
         5,      # num_gated_masked_conv_layers
         1024,   # filters
         5)      # kernel_size
 
-    inputs = tf.random.normal([1, 32])
+    inputs = tf.random.normal([4, 32])
     image = tf.random.uniform(
-        [1, 32, 32],
+        [4, 32, 32],
         minval=0,
         maxval=256,
         dtype=tf.dtypes.int32)
