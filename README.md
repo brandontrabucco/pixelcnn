@@ -25,11 +25,17 @@ Fetch the next batch of conditional vectors to seed the image generation process
 
 ```python
 inputs = tf.random.normal([4, 1, 1, 32])
-images = tf.random.uniform([4, 32, 32], maxval=256, dtype=tf.int32)
+images = tf.zeros([4, 32, 32], dtype=tf.int32)
 ```
 
 Run the model to predict image logits.
 
 ```python
 logits = model([inputs, images])
+```
+
+Select the indices which maximize log probability.
+
+```python
+images = tf.argmax(logits, axis=3, output_type=tf.int32)
 ```
