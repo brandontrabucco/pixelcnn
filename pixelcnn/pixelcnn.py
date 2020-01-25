@@ -9,6 +9,7 @@ import tensorflow as tf
 
 def pixelcnn(
         input_size,
+        output_size,
         num_upconv_layers,
         num_gated_masked_conv_layers,
         filters,
@@ -27,6 +28,7 @@ def pixelcnn(
 
     Args:
     - input_size: the cardinality of the vector space of the inputs
+    - output_size: the cardinality of the vector space of the outputs
     - num_upconv_layers: the number of Transpose Convolution layers to upscale
         the input vector
     - num_gated_masked_conv_layers: the number of Gated Masked Convolution layers
@@ -110,13 +112,13 @@ def pixelcnn(
     #######################################
 
     logits = layers.Conv2D(
-        256,
+        output_size,
         (1, 1),
         strides=(1, 1),
         padding='same',
         data_format='channels_last',
         dilation_rate=(1, 1),
-        activation=activation,
+        activation=None,
         use_bias=use_bias,
         kernel_initializer=kernel_initializer,
         bias_initializer=bias_initializer,
