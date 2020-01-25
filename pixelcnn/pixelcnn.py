@@ -4,16 +4,15 @@
 from pixelcnn.gated_masked_conv import gated_masked_conv
 from tensorflow.keras import layers
 from tensorflow.keras import models
-import tensorflow as tf
 
 
 def pixelcnn(
         input_size,
         output_size,
         num_upconv_layers,
-        num_gated_masked_conv_layers,
-        filters,
-        kernel_size,
+        num_gated_masked_conv_layers=6,
+        filters=64,
+        kernel_size=5,
         activation=None,
         use_bias=True,
         kernel_initializer='glorot_uniform',
@@ -58,18 +57,16 @@ def pixelcnn(
     - dropout_rate: Float between 0 and 1. Fraction of the input units to drop.
 
     Returns:
-    - model: a keras model that accepts input vectors with shape [batch_dim, input_size]
+    - model: a keras model that accepts input vectors with shape [batch_dim, ?, ?, input_size]
        and returns image logits with shape [batch_dim, height, width, 256]
     """
 
-    inputs = layers.Input(shape=[input_size])
+    inputs = layers.Input(shape=[None, None, input_size])
 
     ###########################################
     # Build the Transpose Convolutional stack #
     ###########################################
 
-    x = layers.Lambda(
-        lambda z: z[:, tf.newaxis, tf.newaxis, :])(inputs)
     for i in range(num_upconv_layers):
         x = layers.Conv2DTranspose(
             filters,
