@@ -138,25 +138,7 @@ def pixelcnn(
     # Predict image logits for each pixel #
     #######################################
 
-    x = layers.add([
-        horizontal_x,
-        layers.Conv2D(
-            filters,
-            (1, 1),
-            strides=(1, 1),
-            padding='valid',
-            data_format='channels_last',
-            dilation_rate=(1, 1),
-            activation=activation,
-            use_bias=use_bias,
-            kernel_initializer=kernel_initializer,
-            bias_initializer=bias_initializer,
-            kernel_regularizer=kernel_regularizer,
-            bias_regularizer=bias_regularizer,
-            activity_regularizer=activity_regularizer,
-            kernel_constraint=kernel_constraint,
-            bias_constraint=bias_constraint)(vertical_x)])
-
+    x = layers.concatenate([horizontal_x, vertical_x])
     logits = layers.Conv2D(
         output_size,
         (1, 1),

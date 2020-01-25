@@ -143,6 +143,9 @@ def pixelcnn_plus_plus(
     # Build the Gated Masked Convolutional Stack #
     ##############################################
 
+    vertical_features = [None for j in range(num_blocks // 2)]
+    horizontal_features = [None for j in range(num_blocks // 2)]
+
     for block in range(num_blocks // 2):
 
         for i in range(num_gated_masked_conv_layers_per_block):
@@ -161,6 +164,9 @@ def pixelcnn_plus_plus(
                 kernel_constraint=kernel_constraint,
                 bias_constraint=bias_constraint,
                 dropout_rate=dropout_rate)
+
+        vertical_features[block] = vertical_x
+        horizontal_features[block] = horizontal_x
 
         if block < num_blocks // 2 - 1:
 
@@ -262,6 +268,44 @@ def pixelcnn_plus_plus(
                 padding=[[0, 0], [0, 1]],
                 data_format='channels_last')(horizontal_x)
 
+        vertical_x = layers.add([
+            vertical_features[block],
+            layers.Conv2D(
+                filters * (2 ** block),
+                (1, 1),
+                strides=(1, 1),
+                padding='valid',
+                data_format='channels_last',
+                dilation_rate=(1, 1),
+                activation=activation,
+                use_bias=use_bias,
+                kernel_initializer=kernel_initializer,
+                bias_initializer=bias_initializer,
+                kernel_regularizer=kernel_regularizer,
+                bias_regularizer=bias_regularizer,
+                activity_regularizer=activity_regularizer,
+                kernel_constraint=kernel_constraint,
+                bias_constraint=bias_constraint)(vertical_x)])
+
+        horizontal_x = layers.add([
+            horizontal_features[block],
+            layers.Conv2D(
+                filters * (2 ** block),
+                (1, 1),
+                strides=(1, 1),
+                padding='valid',
+                data_format='channels_last',
+                dilation_rate=(1, 1),
+                activation=activation,
+                use_bias=use_bias,
+                kernel_initializer=kernel_initializer,
+                bias_initializer=bias_initializer,
+                kernel_regularizer=kernel_regularizer,
+                bias_regularizer=bias_regularizer,
+                activity_regularizer=activity_regularizer,
+                kernel_constraint=kernel_constraint,
+                bias_constraint=bias_constraint)(horizontal_x)])
+
         for i in range(num_gated_masked_conv_layers_per_block):
             vertical_x, horizontal_x = gated_masked_conv(
                 vertical_x,
@@ -283,30 +327,12 @@ def pixelcnn_plus_plus(
     # Predict image logits for each pixel #
     #######################################
 
-    x = layers.add([
-        horizontal_x,
-        layers.Conv2D(
-            filters,
-            (1, 1),
-            strides=(1, 1),
-            padding='valid',
-            data_format='channels_last',
-            dilation_rate=(1, 1),
-            activation=activation,
-            use_bias=use_bias,
-            kernel_initializer=kernel_initializer,
-            bias_initializer=bias_initializer,
-            kernel_regularizer=kernel_regularizer,
-            bias_regularizer=bias_regularizer,
-            activity_regularizer=activity_regularizer,
-            kernel_constraint=kernel_constraint,
-            bias_constraint=bias_constraint)(vertical_x)])
-
+    x = layers.concatenate([horizontal_x, vertical_x])
     logits = layers.Conv2D(
         output_size,
         (1, 1),
         strides=(1, 1),
-        padding='same',
+        padding='valid',
         data_format='channels_last',
         dilation_rate=(1, 1),
         activation=None,
