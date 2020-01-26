@@ -15,22 +15,21 @@ pip install git+git://github.com/brandontrabucco/pixelcnn.git
 Create a Pixel CNN Keras Model.
 
 ```python
-model = pixelcnn.pixelcnn_plus_plus(
-    32,     # input_size
-    256,    # output_size
-    5)      # num_upconv_layers
+model = pixelcnn.conditional_pixelcnn_plus_plus(
+    32,     # conditional_vector_size
+    256)    # output_size
 ```
 
 Fetch the next batch of conditional vectors to seed the image generation process.
 
 ```python
-inputs = tf.random.normal([4, 1, 1, 32])
-images = tf.zeros([4, 32, 32], dtype=tf.int32)
+inputs = tf.random.normal([12, 1, 1, 32])
+images = tf.zeros([12, 32, 32], dtype=tf.int32)
 ```
 
 Run the model to predict image logits and select the indices which maximize log probability.
 
 ```python
-logits = model([inputs, images])
+logits = model([images, inputs])
 images = tf.argmax(logits, axis=3, output_type=tf.int32)
 ```
