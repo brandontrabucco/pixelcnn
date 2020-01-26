@@ -7,6 +7,7 @@ from setuptools import setup
 
 REQUIRED_PACKAGES = [
     'tensorflow-gpu==2.0',
+    'tensorflow-datasets',
     'numpy']
 
 

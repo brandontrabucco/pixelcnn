@@ -123,6 +123,8 @@ def ConditionalPixelCNN(
         num_layers=6,
         filters=256,
         dropout_rate=0.1,
+        condition_on_classes=True,
+        num_classes=None,
         **kwargs
 ):
     """Build a Conditional Pixel CNN model in Keras.
@@ -145,19 +147,34 @@ def ConditionalPixelCNN(
     - filters: the number of filters iun each Conv2D layer.
     - dropout_rate: the fraction of units to drop.
 
+    - condition_on_classes: a boolean that indicates that
+        the conditional inputs are class labels.
+    - num_classes: an integer that determines the number
+        of unique classes to condition on.
+
     Returns:
     - model: a Keras model that accepts one tf.int32 tensor
-        with shape [batch_dim, image_height, image_width]
+        with shape [batch_dim, image_height, image_width] and
+        with shape [batch_dim, conditional_height,
+            conditional_width, conditional_vector_size]
     """
-    inputs = layers.Input(shape=[
-        conditional_height, conditional_width, conditional_vector_size])
     images = layers.Input(shape=[image_height, image_width])
+    if condition_on_classes:
+        inputs = layers.Input(shape=[conditional_height, conditional_width])
+    else:
+        inputs = layers.Input(shape=[
+            conditional_height, conditional_width, conditional_vector_size])
 
     #####################################################
     # Upsample the conditional inputs to the image size #
     #####################################################
 
     conditional_embedding = inputs
+    if condition_on_classes:
+        conditional_embedding = layers.TimeDistributed(
+            layers.Embedding(
+                num_classes, conditional_vector_size))(conditional_embedding)
+
     for i in range(num_preprocess_layers):
         if i > 0:
             conditional_embedding = concat_elu(conditional_embedding)
