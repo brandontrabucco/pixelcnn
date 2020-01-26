@@ -1,162 +1,197 @@
 """Author: Brandon Trabucco, Copyright 2020, MIT License"""
 
 
-from pixelcnn.gated_masked_conv import gated_masked_conv
+from pixelcnn.gated_resnet import gated_resnet
+from pixelcnn.ops import down_shifted_conv2d
+from pixelcnn.ops import down_right_shifted_conv2d
+from pixelcnn.ops import down_shifted_conv2d_transpose
+from pixelcnn.ops import down_right_shifted_conv2d_transpose
+from pixelcnn.ops import down_shift
+from pixelcnn.ops import right_shift
+from pixelcnn.ops import concat_elu
 from tensorflow.keras import layers
 from tensorflow.keras import models
+import tensorflow as tf
 
 
 def pixelcnn(
-        input_size,
         output_size,
-        num_upconv_layers,
-        num_gated_masked_conv_layers=6,
-        filters=64,
-        kernel_size=5,
-        activation=None,
-        use_bias=True,
-        kernel_initializer='glorot_uniform',
-        bias_initializer='zeros',
-        kernel_regularizer=None,
-        bias_regularizer=None,
-        activity_regularizer=None,
-        kernel_constraint=None,
-        bias_constraint=None,
+        image_height=32,
+        image_width=32,
+        num_layers=6,
+        filters=256,
         dropout_rate=0.1,
+        **kwargs
 ):
-    """Stack many Gated Masked Convolution layers into a Conditional Gated PixelCNN.
+    """Build a Pixel CNN model in Keras."""
+    images = layers.Input(shape=[image_height, image_width])
 
-    Args:
-    - input_size: the cardinality of the vector space of the inputs
-    - output_size: the cardinality of the vector space of the outputs
-    
-    - num_upconv_layers: the number of Transpose Convolution layers to upscale
-        the input vector
-    - num_gated_masked_conv_layers: the number of Gated Masked Convolution layers
+    #####################################################
+    # Embed the discrete image pixels in a vector space #
+    #####################################################
 
-    - filters: Integer, the dimensionality of the output space (i.e. the number
-        of output filters in the convolution).
-    - kernel_size: An integer or tuple/list of 2 integers, specifying the height
-        and width of the 2D convolution window. Can be a single integer to specify
-        the same value for all spatial dimensions.
-
-    - activation: Activation function to use. If you don't specify anything, no
-        activation is applied (ie. "linear" activation: a(x) = x).
-    - use_bias: Boolean, whether the layer uses a bias vector.
-
-    - kernel_initializer: Initializer for the kernel weights matrix.
-    - bias_initializer: Initializer for the bias vector.
-
-    - kernel_regularizer: Regularizer function applied to the kernel weights matrix.
-    - bias_regularizer: Regularizer function applied to the bias vector.
-    - activity_regularizer: Regularizer function applied to the output of the layer
-        (its "activation").
-
-    - kernel_constraint: Constraint function applied to the kernel matrix.
-    - bias_constraint: Constraint function applied to the bias vector.
-
-    - dropout_rate: Float between 0 and 1. Fraction of the input units to drop.
-
-    Returns:
-    - model: a keras model that accepts input vectors with shape [batch_dim, ?, ?, input_size]
-       and returns image logits with shape [batch_dim, height, width, 256]
-    """
-
-    inputs = layers.Input(shape=[None, None, input_size])
-    image = layers.Input(shape=[None, None])
-
-    #########################################
-    # Embed image pixels into feature space #
-    #########################################
-
-    embeddings = layers.TimeDistributed(
-        layers.Embedding(output_size, filters))(image)
-
-    ###########################################
-    # Build the Transpose Convolutional stack #
-    ###########################################
-
-    x = inputs
-    for i in range(num_upconv_layers):
-        x = layers.Conv2DTranspose(
-            filters,
-            kernel_size,
-            strides=(2, 2),
-            padding='same',
-            output_padding=None,
-            data_format='channels_last',
-            dilation_rate=(1, 1),
-            activation=activation,
-            use_bias=use_bias,
-            kernel_initializer=kernel_initializer,
-            bias_initializer=bias_initializer,
-            kernel_regularizer=kernel_regularizer,
-            bias_regularizer=bias_regularizer,
-            activity_regularizer=activity_regularizer,
-            kernel_constraint=kernel_constraint,
-            bias_constraint=bias_constraint)(x)
-
-    x = layers.concatenate([embeddings, x])
-    vertical_x = horizontal_x = layers.Conv2D(
-        filters,
-        (1, 1),
-        strides=(1, 1),
-        padding='valid',
-        data_format='channels_last',
-        dilation_rate=(1, 1),
-        activation=activation,
-        use_bias=use_bias,
-        kernel_initializer=kernel_initializer,
-        bias_initializer=bias_initializer,
-        kernel_regularizer=kernel_regularizer,
-        bias_regularizer=bias_regularizer,
-        activity_regularizer=activity_regularizer,
-        kernel_constraint=kernel_constraint,
-        bias_constraint=bias_constraint)(x)
+    images_embedding = layers.TimeDistributed(
+        layers.Embedding(output_size, filters))(images)
+    images_embedding = layers.concatenate([
+        images_embedding,
+        layers.Lambda(lambda z: tf.ones([
+            tf.shape(z)[0],
+            tf.shape(z)[1],
+            tf.shape(z)[2],
+            1]))(images_embedding)])
 
     ##############################################
-    # Build the Gated Masked Convolutional Stack #
+    # Prepare the image for shifted convolutions #
     ##############################################
 
-    for i in range(num_gated_masked_conv_layers):
-        vertical_x, horizontal_x = gated_masked_conv(
-            vertical_x,
-            horizontal_x,
-            filters,
-            kernel_size,
-            activation=activation,
-            use_bias=use_bias,
-            kernel_initializer=kernel_initializer,
-            bias_initializer=bias_initializer,
-            kernel_regularizer=kernel_regularizer,
-            bias_regularizer=bias_regularizer,
-            activity_regularizer=activity_regularizer,
-            kernel_constraint=kernel_constraint,
-            bias_constraint=bias_constraint,
-            dropout_rate=dropout_rate)
+    top = down_shift(
+        down_shifted_conv2d(
+            images_embedding, filters, kernel_size=(2, 3)))
 
-    #######################################
-    # Predict image logits for each pixel #
-    #######################################
+    initial_top_left_stream_a = down_shift(
+        down_shifted_conv2d(
+            images_embedding, filters, kernel_size=(1, 3)))
+    initial_top_left_stream_b = right_shift(
+        down_right_shifted_conv2d(
+            images_embedding, filters, kernel_size=(2, 1)))
+    top_left = layers.add([
+        initial_top_left_stream_a, initial_top_left_stream_b])
 
-    x = layers.concatenate([horizontal_x, vertical_x])
+    ###################################################
+    # Process with Residual Gated Masked Convolutions #
+    ###################################################
+
+    for layer in range(num_layers):
+
+        top = gated_resnet(
+            top,
+            conv2d=down_shifted_conv2d,
+            nonlinearity=concat_elu,
+            kernel_size=(2, 3),
+            dropout_rate=dropout_rate,
+            **kwargs)
+
+        top_left = gated_resnet(
+            top_left,
+            a=top,
+            conv2d=down_right_shifted_conv2d,
+            nonlinearity=concat_elu,
+            kernel_size=(2, 2),
+            dropout_rate=dropout_rate,
+            **kwargs)
+
+    #################################################
+    # Compute logits for every image pixel location #
+    #################################################
+
+    top_left = concat_elu(top_left)
     logits = layers.Conv2D(
         output_size,
         (1, 1),
         strides=(1, 1),
         padding='valid',
         data_format='channels_last',
-        dilation_rate=(1, 1),
-        activation=None,
-        use_bias=use_bias,
-        kernel_initializer=kernel_initializer,
-        bias_initializer=bias_initializer,
-        kernel_regularizer=kernel_regularizer,
-        bias_regularizer=bias_regularizer,
-        activity_regularizer=activity_regularizer,
-        kernel_constraint=kernel_constraint,
-        bias_constraint=bias_constraint)(x)
+        **kwargs)(top_left)
 
-    model = models.Model(inputs=[inputs, image], outputs=logits)
+    return models.Model(inputs=[images], outputs=logits)
 
-    return model
+
+def conditional_pixelcnn(
+        conditional_vector_size,
+        output_size,
+        conditional_height=1,
+        conditional_width=1,
+        image_height=32,
+        image_width=32,
+        num_preprocess_layers=3,
+        num_layers=6,
+        filters=256,
+        dropout_rate=0.1,
+        **kwargs
+):
+    """Build a Conditional Pixel CNN model in Keras."""
+    inputs = layers.Input(shape=[
+        conditional_height, conditional_width, conditional_vector_size])
+    images = layers.Input(shape=[image_height, image_width])
+
+    #####################################################
+    # Upsample the conditional inputs to the image size #
+    #####################################################
+
+    conditional_embedding = inputs
+    for i in range(num_preprocess_layers):
+        conditional_embedding = layers.Conv2DTranspose(
+            filters,
+            (5, 5),
+            strides=(2, 2),
+            padding='same',
+            data_format='channels_last',
+            **kwargs)(conditional_embedding)
+
+    #####################################################
+    # Embed the discrete image pixels in a vector space #
+    #####################################################
+
+    images_embedding = layers.TimeDistributed(
+        layers.Embedding(output_size, filters))(images)
+    images_embedding = layers.Lambda(lambda z: tf.pad(
+        z,
+        [[0, 0], [0, 0], [0, 0], [0, 1]],
+        constant_values=1))(images_embedding)
+
+    ##############################################
+    # Prepare the image for shifted convolutions #
+    ##############################################
+
+    top = down_shift(
+        down_shifted_conv2d(
+            images_embedding, filters, kernel_size=(2, 3)))
+
+    initial_top_left_stream_a = down_shift(
+        down_shifted_conv2d(
+            images_embedding, filters, kernel_size=(1, 3)))
+    initial_top_left_stream_b = right_shift(
+        down_right_shifted_conv2d(
+            images_embedding, filters, kernel_size=(2, 1)))
+    top_left = layers.add([
+        initial_top_left_stream_a, initial_top_left_stream_b])
+
+    ###################################################
+    # Process with Residual Gated Masked Convolutions #
+    ###################################################
+
+    for layer in range(num_layers):
+
+        top = gated_resnet(
+            top,
+            h=conditional_embedding,
+            conv2d=down_shifted_conv2d,
+            nonlinearity=concat_elu,
+            kernel_size=(2, 3),
+            dropout_rate=dropout_rate,
+            **kwargs)
+
+        top_left = gated_resnet(
+            top_left,
+            a=top,
+            h=conditional_embedding,
+            conv2d=down_right_shifted_conv2d,
+            nonlinearity=concat_elu,
+            kernel_size=(2, 2),
+            dropout_rate=dropout_rate,
+            **kwargs)
+
+    #################################################
+    # Compute logits for every image pixel location #
+    #################################################
+
+    top_left = concat_elu(top_left)
+    logits = layers.Conv2D(
+        output_size,
+        (1, 1),
+        strides=(1, 1),
+        padding='valid',
+        data_format='channels_last',
+        **kwargs)(top_left)
+
+    return models.Model(inputs=[images, inputs], outputs=logits)

@@ -1,28 +1,30 @@
 """Author: Brandon Trabucco, Copyright 2020, MIT License"""
 
 
-from pixelcnn import pixelcnn_plus_plus
+from pixelcnn import conditional_pixelcnn_plus_plus
 import tensorflow as tf
 
 
 if __name__ == "__main__":
 
-    model = pixelcnn_plus_plus(
-        32,     # input_size
+    model = conditional_pixelcnn_plus_plus(
+        32,     # conditional_vector_size
         256,    # output_size
-        5)      # num_upconv_layers
+        conditional_height=4,
+        conditional_width=4,
+        image_height=32,
+        image_width=32)
 
-    inputs = tf.random.normal([4, 1, 1, 32])
-    image = tf.random.uniform(
-        [4, 32, 32],
-        minval=0,
+    inputs = tf.random.normal([12, 4, 4, 32])
+    images = tf.random.uniform(
+        [12, 32, 32],
         maxval=256,
         dtype=tf.dtypes.int32)
 
-    logits = model([inputs, image])
+    logits = model([images, inputs])
 
     loss = tf.keras.losses.sparse_categorical_crossentropy(
-        image,
+        images,
         logits,
         from_logits=True)
     loss = tf.reduce_mean(loss)
