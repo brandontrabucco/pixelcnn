@@ -224,7 +224,7 @@ def ConditionalPixelCNNPlusPlus(
             conditional_width, conditional_vector_size]
     """
     images = layers.Input(shape=[image_height, image_width])
-    if condition_on_classes:
+    if class_conditional:
         inputs = layers.Input(shape=[conditional_height, conditional_width])
     else:
         inputs = layers.Input(shape=[
@@ -235,7 +235,7 @@ def ConditionalPixelCNNPlusPlus(
     #####################################################
 
     conditional_embedding = [inputs]
-    if condition_on_classes:
+    if class_conditional:
         conditional_embedding[-1] = layers.TimeDistributed(
             layers.Embedding(
                 num_classes, conditional_vector_size))(conditional_embedding[-1])
