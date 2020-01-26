@@ -224,13 +224,16 @@ def ConditionalPixelCNNPlusPlus(
 
     conditional_embedding = [inputs]
     for i in range(num_preprocess_layers):
+        x = conditional_embedding[-1]
+        if i > 0:
+            x = concat_elu(x)
         conditional_embedding.append(layers.Conv2DTranspose(
             filters,
             (5, 5),
             strides=(2, 2),
             padding='same',
             data_format='channels_last',
-            **kwargs)(concat_elu(conditional_embedding[-1])))
+            **kwargs)(x))
 
     #####################################################
     # Embed the discrete image pixels in a vector space #
