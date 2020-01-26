@@ -103,7 +103,7 @@ def conditional_pixelcnn(
         conditional_width=1,
         image_height=32,
         image_width=32,
-        num_preprocess_layers=3,
+        num_preprocess_layers=5,
         num_layers=6,
         filters=256,
         dropout_rate=0.1,

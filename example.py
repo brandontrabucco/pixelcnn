@@ -9,13 +9,9 @@ if __name__ == "__main__":
 
     model = conditional_pixelcnn_plus_plus(
         32,     # conditional_vector_size
-        256,    # output_size
-        conditional_height=4,
-        conditional_width=4,
-        image_height=32,
-        image_width=32)
+        256)    # output_size
 
-    inputs = tf.random.normal([12, 4, 4, 32])
+    inputs = tf.random.normal([12, 1, 1, 32])
     images = tf.random.uniform(
         [12, 32, 32],
         maxval=256,

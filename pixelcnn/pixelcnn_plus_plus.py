@@ -163,7 +163,7 @@ def conditional_pixelcnn_plus_plus(
         conditional_width=1,
         image_height=32,
         image_width=32,
-        num_preprocess_layers=3,
+        num_preprocess_layers=5,
         num_modules=3,
         num_layers_per_module=6,
         filters=256,
