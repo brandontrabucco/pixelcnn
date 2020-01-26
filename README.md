@@ -32,8 +32,8 @@ model = pixelcnn.ConditionalPixelCNNPlusPlus(
 Fetch the next batch of conditional vectors to seed the image generation process.
 
 ```python
-inputs = tf.random.normal([12, 1, 1, 32])
 images = tf.zeros([12, 32, 32], dtype=tf.int32)
+inputs = tf.random.normal([12, 1, 1, 32])
 ```
 
 Run the model to predict image logits and select the indices which maximize log probability.
