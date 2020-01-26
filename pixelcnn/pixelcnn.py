@@ -165,7 +165,7 @@ def ConditionalPixelCNN(
             strides=(2, 2),
             padding='same',
             data_format='channels_last',
-            **kwargs)(conditional_embedding)
+            **kwargs)(concat_elu(conditional_embedding))
 
     #####################################################
     # Embed the discrete image pixels in a vector space #
