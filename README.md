@@ -15,7 +15,7 @@ pip install git+git://github.com/brandontrabucco/pixelcnn.git
 Create a Pixel CNN Keras Model.
 
 ```python
-model = pixelcnn.conditional_pixelcnn_plus_plus(
+model = pixelcnn.ConditionalPixelCNNPlusPlus(
     256,    # output_size
     32)     # conditional_vector_size
 ```

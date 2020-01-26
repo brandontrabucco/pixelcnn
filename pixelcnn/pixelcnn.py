@@ -14,7 +14,7 @@ from tensorflow.keras import models
 import tensorflow as tf
 
 
-def pixelcnn(
+def PixelCNN(
         output_size,
         image_height=32,
         image_width=32,
@@ -23,7 +23,23 @@ def pixelcnn(
         dropout_rate=0.1,
         **kwargs
 ):
-    """Build a Pixel CNN model in Keras."""
+    """Build a Pixel CNN model in Keras.
+
+    Args:
+    - output_size: the cardinality of the output vector space.
+
+    - image_height: the height of the images to generate.
+    - image_width: the width of the images to generate.
+
+    - num_layers: the number of Gated Masked Conv2D layers.
+
+    - filters: the number of filters iun each Conv2D layer.
+    - dropout_rate: the fraction of units to drop.
+
+    Returns:
+    - model: a Keras model that accepts one tf.int32 tensor
+        with shape [batch_dim, image_height, image_width]
+    """
     images = layers.Input(shape=[image_height, image_width])
 
     #####################################################
@@ -96,7 +112,7 @@ def pixelcnn(
     return models.Model(inputs=[images], outputs=logits)
 
 
-def conditional_pixelcnn(
+def ConditionalPixelCNN(
         output_size,
         conditional_vector_size,
         image_height=32,
@@ -109,7 +125,30 @@ def conditional_pixelcnn(
         dropout_rate=0.1,
         **kwargs
 ):
-    """Build a Conditional Pixel CNN model in Keras."""
+    """Build a Conditional Pixel CNN model in Keras.
+
+    Args:
+    - output_size: the cardinality of the output vector space.
+    - conditional_vector_size: the cardinality of the vector space
+        for conditioning image generation.
+
+    - image_height: the height of the images to generate.
+    - image_width: the width of the images to generate.
+
+    - conditional_height: the height of the conditional input.
+    - conditional_width: the width of the conditional input.
+
+    - num_preprocess_layers: the number of Conv2DTranspose layers
+        for upsampling the conditional input.
+    - num_layers: the number of Gated Masked Conv2D layers.
+
+    - filters: the number of filters iun each Conv2D layer.
+    - dropout_rate: the fraction of units to drop.
+
+    Returns:
+    - model: a Keras model that accepts one tf.int32 tensor
+        with shape [batch_dim, image_height, image_width]
+    """
     inputs = layers.Input(shape=[
         conditional_height, conditional_width, conditional_vector_size])
     images = layers.Input(shape=[image_height, image_width])

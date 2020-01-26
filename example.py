@@ -1,13 +1,13 @@
 """Author: Brandon Trabucco, Copyright 2020, MIT License"""
 
 
-from pixelcnn import conditional_pixelcnn_plus_plus
+from pixelcnn import ConditionalPixelCNNPlusPlus
 import tensorflow as tf
 
 
 if __name__ == "__main__":
 
-    model = conditional_pixelcnn_plus_plus(
+    model = ConditionalPixelCNNPlusPlus(
         256,    # output_size
         32)     # conditional_vector_size
 
