@@ -186,7 +186,7 @@ def ConditionalPixelCNNPlusPlus(
         num_layers_per_module=6,
         filters=256,
         dropout_rate=0.1,
-        condition_on_classes=True,
+        class_conditional=True,
         num_classes=None,
         **kwargs
 ):
@@ -212,7 +212,7 @@ def ConditionalPixelCNNPlusPlus(
     - filters: the number of filters iun each Conv2D layer.
     - dropout_rate: the fraction of units to drop.
 
-    - condition_on_classes: a boolean that indicates that
+    - class_conditional: a boolean that indicates that
         the conditional inputs are class labels.
     - num_classes: an integer that determines the number
         of unique classes to condition on.
