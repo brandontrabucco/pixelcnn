@@ -8,8 +8,8 @@ import tensorflow as tf
 if __name__ == "__main__":
 
     model = conditional_pixelcnn_plus_plus(
-        32,     # conditional_vector_size
-        256)    # output_size
+        256,    # output_size
+        32)     # conditional_vector_size
 
     inputs = tf.random.normal([12, 1, 1, 32])
     images = tf.random.uniform(

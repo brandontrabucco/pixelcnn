@@ -16,8 +16,8 @@ Create a Pixel CNN Keras Model.
 
 ```python
 model = pixelcnn.conditional_pixelcnn_plus_plus(
-    32,     # conditional_vector_size
-    256)    # output_size
+    256,    # output_size
+    32)     # conditional_vector_size
 ```
 
 Fetch the next batch of conditional vectors to seed the image generation process.

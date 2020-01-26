@@ -157,12 +157,12 @@ def pixelcnn_plus_plus(
 
 
 def conditional_pixelcnn_plus_plus(
-        conditional_vector_size,
         output_size,
-        conditional_height=1,
-        conditional_width=1,
+        conditional_vector_size,
         image_height=32,
         image_width=32,
+        conditional_height=1,
+        conditional_width=1,
         num_preprocess_layers=5,
         num_modules=3,
         num_layers_per_module=6,
