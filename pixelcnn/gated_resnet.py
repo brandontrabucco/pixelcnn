@@ -68,6 +68,9 @@ def gated_resnet(
             data_format='channels_last',
             **kwargs)(h)])
 
-    c_a, c_b = layers.Lambda(lambda z: tf.split(z, 2, axis=3))(c)
+    def split_backend(z):
+        return tf.split(z, 2, axis=3)
+
+    c_a, c_b = layers.Lambda(split_backend)(c)
     return layers.add([x, layers.multiply([
         c_a, layers.Activation(tf.math.sigmoid)(c_b)])])

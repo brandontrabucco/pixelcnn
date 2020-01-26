@@ -108,9 +108,12 @@ def down_shifted_conv2d(
     dy = kernel_size if isinstance(kernel_size, int) else kernel_size[0]
     dx = kernel_size if isinstance(kernel_size, int) else kernel_size[1]
 
-    x = layers.Lambda(lambda z: tf.pad(
-        z, [[0, 0], [dy - 1, 0], [int((
-            dx - 1) / 2), int((dx - 1) / 2)], [0, 0]]))(x)
+    def padding_backend(z):
+        return tf.pad(
+            z, [[0, 0], [dy - 1, 0], [int((
+                dx - 1) / 2), int((dx - 1) / 2)], [0, 0]])
+
+    x = layers.Lambda(padding_backend)(x)
 
     return layers.Conv2D(
         filters,
@@ -151,9 +154,11 @@ def down_shifted_conv2d_transpose(
     dy = kernel_size if isinstance(kernel_size, int) else kernel_size[0]
     dx = kernel_size if isinstance(kernel_size, int) else kernel_size[1]
 
-    return layers.Lambda(
-        lambda z: z[:, :(x.shape[1] - dy + 1), int((
-            dx - 1) / 2):(x.shape[2] - int((dx - 1) / 2)), :])(x)
+    def slicing_backend(z):
+        return z[:, :(z.shape[1] - dy + 1), int((
+            dx - 1) / 2):(z.shape[2] - int((dx - 1) / 2)), :]
+
+    return layers.Lambda(slicing_backend)(x)
 
 
 def down_right_shifted_conv2d(
@@ -179,8 +184,11 @@ def down_right_shifted_conv2d(
     dy = kernel_size if isinstance(kernel_size, int) else kernel_size[0]
     dx = kernel_size if isinstance(kernel_size, int) else kernel_size[1]
 
-    x = layers.Lambda(lambda z: tf.pad(
-        z, [[0, 0], [dy - 1, 0], [dx - 1, 0], [0, 0]]))(x)
+    def padding_backend(z):
+        return tf.pad(
+            z, [[0, 0], [dy - 1, 0], [dx - 1, 0], [0, 0]])
+
+    x = layers.Lambda(padding_backend)(x)
 
     return layers.Conv2D(
         filters,
@@ -221,6 +229,8 @@ def down_right_shifted_conv2d_transpose(
     dy = kernel_size if isinstance(kernel_size, int) else kernel_size[0]
     dx = kernel_size if isinstance(kernel_size, int) else kernel_size[1]
 
-    return layers.Lambda(
-        lambda z: z[:, :(
-            x.shape[1] - dy + 1):, :(x.shape[2] - dx + 1), :])(x)
+    def slicing_backend(z):
+        return z[:, :(
+            z.shape[1] - dy + 1):, :(z.shape[2] - dx + 1), :]
+
+    return layers.Lambda(slicing_backend)(x)

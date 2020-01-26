@@ -190,12 +190,15 @@ def ConditionalPixelCNN(
     # Embed the discrete image pixels in a vector space #
     #####################################################
 
+    def padding_backend(z):
+        return tf.pad(
+            z,
+            [[0, 0], [0, 0], [0, 0], [0, 1]],
+            constant_values=1)
+
     images_embedding = layers.TimeDistributed(
         layers.Embedding(output_size, filters))(images)
-    images_embedding = layers.Lambda(lambda z: tf.pad(
-        z,
-        [[0, 0], [0, 0], [0, 0], [0, 1]],
-        constant_values=1))(images_embedding)
+    images_embedding = layers.Lambda(padding_backend)(images_embedding)
 
     ##############################################
     # Prepare the image for shifted convolutions #

@@ -52,4 +52,8 @@ if __name__ == "__main__":
 
             return bits_per_dim
 
-        optimizer.minimize(loss_function, model.trainable_variables)
+        optimizer.minimize(
+            loss_function, model.trainable_variables)
+
+        if i % 100 == 0:
+            model.save('model.h5')
