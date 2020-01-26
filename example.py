@@ -20,7 +20,7 @@ if __name__ == "__main__":
         num_layers_per_module=6,
         filters=64,
         dropout_rate=0.1,
-        condition_on_classes=True,
+        class_conditional=True,
         num_classes=10)
 
     optimizer = tf.keras.optimizers.Adam()
