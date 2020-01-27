@@ -18,6 +18,7 @@ def PixelCNN(
         output_size,
         image_height=32,
         image_width=32,
+        image_is_discrete=True,
         num_layers=6,
         filters=256,
         dropout_rate=0.1,
@@ -30,6 +31,8 @@ def PixelCNN(
 
     - image_height: the height of the images to generate.
     - image_width: the width of the images to generate.
+    - image_is_discrete: a boolean that indicates whether
+        the image is discrete or continuous features.
 
     - num_layers: the number of Gated Masked Conv2D layers.
 
@@ -40,21 +43,27 @@ def PixelCNN(
     - model: a Keras model that accepts one tf.int32 tensor
         with shape [batch_dim, image_height, image_width]
     """
-    images = layers.Input(shape=[image_height, image_width])
+    if image_is_discrete:
+        images = layers.Input(shape=[image_height, image_width])
+    else:
+        images = layers.Input(shape=[image_height, image_width, filters])
 
     #####################################################
     # Embed the discrete image pixels in a vector space #
     #####################################################
 
-    images_embedding = layers.TimeDistributed(
-        layers.Embedding(output_size, filters))(images)
-    images_embedding = layers.concatenate([
-        images_embedding,
-        layers.Lambda(lambda z: tf.ones([
-            tf.shape(z)[0],
-            tf.shape(z)[1],
-            tf.shape(z)[2],
-            1]))(images_embedding)])
+    def padding_backend(z):
+        return tf.pad(
+            z,
+            [[0, 0], [0, 0], [0, 0], [0, 1]],
+            constant_values=1)
+
+    if image_is_discrete:
+        images_embedding = layers.TimeDistributed(
+            layers.Embedding(output_size, filters))(images)
+    else:
+        images_embedding = images
+    images_embedding = layers.Lambda(padding_backend)(images_embedding)
 
     ##############################################
     # Prepare the image for shifted convolutions #
@@ -117,14 +126,15 @@ def ConditionalPixelCNN(
         conditional_vector_size,
         image_height=32,
         image_width=32,
+        image_is_discrete=True,
         conditional_height=1,
         conditional_width=1,
+        class_conditional=True,
+        num_classes=None,
         num_preprocess_layers=5,
         num_layers=6,
         filters=256,
         dropout_rate=0.1,
-        class_conditional=True,
-        num_classes=None,
         **kwargs
 ):
     """Build a Conditional Pixel CNN model in Keras.
@@ -136,9 +146,15 @@ def ConditionalPixelCNN(
 
     - image_height: the height of the images to generate.
     - image_width: the width of the images to generate.
+    - image_is_discrete: a boolean that indicates whether
+        the image is discrete or continuous features.
 
     - conditional_height: the height of the conditional input.
     - conditional_width: the width of the conditional input.
+    - class_conditional: a boolean that indicates that
+        the conditional inputs are class labels.
+    - num_classes: an integer that determines the number
+        of unique classes to condition on.
 
     - num_preprocess_layers: the number of Conv2DTranspose layers
         for upsampling the conditional input.
@@ -147,18 +163,16 @@ def ConditionalPixelCNN(
     - filters: the number of filters iun each Conv2D layer.
     - dropout_rate: the fraction of units to drop.
 
-    - class_conditional: a boolean that indicates that
-        the conditional inputs are class labels.
-    - num_classes: an integer that determines the number
-        of unique classes to condition on.
-
     Returns:
     - model: a Keras model that accepts one tf.int32 tensor
         with shape [batch_dim, image_height, image_width] and
         with shape [batch_dim, conditional_height,
             conditional_width, conditional_vector_size]
     """
-    images = layers.Input(shape=[image_height, image_width])
+    if image_is_discrete:
+        images = layers.Input(shape=[image_height, image_width])
+    else:
+        images = layers.Input(shape=[image_height, image_width, filters])
     if class_conditional:
         inputs = layers.Input(shape=[conditional_height, conditional_width])
     else:
@@ -196,8 +210,11 @@ def ConditionalPixelCNN(
             [[0, 0], [0, 0], [0, 0], [0, 1]],
             constant_values=1)
 
-    images_embedding = layers.TimeDistributed(
-        layers.Embedding(output_size, filters))(images)
+    if image_is_discrete:
+        images_embedding = layers.TimeDistributed(
+            layers.Embedding(output_size, filters))(images)
+    else:
+        images_embedding = images
     images_embedding = layers.Lambda(padding_backend)(images_embedding)
 
     ##############################################
