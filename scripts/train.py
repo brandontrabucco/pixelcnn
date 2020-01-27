@@ -8,6 +8,8 @@ import tensorflow as tf
 
 if __name__ == "__main__":
 
+    tf.io.gfile.makedirs("models")
+
     model = ConditionalPixelCNNPlusPlus(
         1000,
         32,
@@ -26,15 +28,14 @@ if __name__ == "__main__":
     optimizer = tf.keras.optimizers.Adam()
 
     train_ds = tfds.load("cifar10", split="train")
-    train_ds = train_ds.shuffle(1024)
-    train_ds = train_ds.batch(32)
-    train_ds = train_ds.repeat(5)
+    train_ds = train_ds.shuffle(1024).batch(32).repeat(5)
     train_ds = train_ds.prefetch(10)
 
     for i, example in enumerate(train_ds):
 
         images = tf.cast(tf.cast(
             example["image"], tf.float32) / 25.6, tf.int32)
+
         images = (images[:, :, :, 0] +
                   images[:, :, :, 1] * 10 +
                   images[:, :, :, 2] * 100)
@@ -52,8 +53,7 @@ if __name__ == "__main__":
 
             return bits_per_dim
 
-        optimizer.minimize(
-            loss_function, model.trainable_variables)
+        optimizer.minimize(loss_function, model.trainable_variables)
 
         if i % 100 == 0:
-            model.save('model.h5')
+            model.save('models/model.h5')

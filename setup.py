@@ -7,8 +7,9 @@ from setuptools import setup
 
 REQUIRED_PACKAGES = [
     'tensorflow-gpu==2.0',
+    'numpy',
     'tensorflow-datasets',
-    'numpy']
+    'matplotlib']
 
 
 setup(
