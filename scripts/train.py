@@ -49,7 +49,7 @@ if __name__ == "__main__":
                 tf.keras.losses.sparse_categorical_crossentropy(
                     images, model([images, labels]), from_logits=True))
 
-            tf.print("Iteration:", i, "Loss:", bits_per_dim)
+            tf.print("Iteration:", i, "Bits Per Dim:", bits_per_dim)
 
             return bits_per_dim
 
